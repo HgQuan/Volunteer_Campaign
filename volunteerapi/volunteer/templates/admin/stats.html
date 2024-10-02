@@ -1,0 +1,327 @@
+{% extends 'admin/base_site.html' %}
+
+{% block content %}
+<style>
+    {% include 'admin/css/style.css' %}
+</style>
+
+<section class="headerStats">
+    <div class="card">
+        <p class="cardHeading">{{ total_buyer }}</p>
+        <p class="cardDescription">Người tiêu dùng</p>
+    </div>
+
+    <div class="card">
+        <p class="cardHeading">{{ total_order_pending }}</p>
+        <p class="cardDescription">Đơn hàng đang xử lý</p>
+    </div>
+
+    <div class="card">
+        <p class="cardHeading">{{ total_campaign }}</p>
+        <p class="cardDescription">Chiến dịch</p>
+    </div>
+
+    <div class="card">
+        <p class="cardHeading">{{ total_product }}</p>
+        <p class="cardDescription">Sản Phẩm</p>
+    </div>
+
+    <div class="card">
+        <p class="cardHeading">{{ total_revenue }} VND</p>
+        <p class="cardDescription">Doanh Thu</p>
+    </div>
+
+</section>
+<section class="stats">
+    <div class="time">
+        <h1> THỐNG KÊ HỆ THỐNG CHI TIẾT </h1>
+        <form method="get" class="dateForm">
+            <span class="dateFormItem">
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+            </span>
+            <span class="dateFormItem">
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+            </span>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <section class="charts">
+        <div class="chart">
+            <canvas id="myChart"></canvas>
+        </div>
+        <div class="chart">
+            <canvas id="myChart1"></canvas>
+        </div>
+        <div class="chart">
+            <canvas id="myChart2"></canvas>
+        </div>
+<!--        <div class="chart">-->
+<!--            <canvas id="myChart3"></canvas>-->
+<!--        </div>-->
+        <div class="chart">
+            <canvas id="myChart4"></canvas>
+        </div>
+
+    </section>
+</section>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let productLabels = [];
+    let salesData = [];
+
+    // Vòng lặp để lấy dữ liệu từ top 10 sản phẩm
+    {% for p in top_10_products %}
+        productLabels.push('{{ p.name }}');  // Thêm tên sản phẩm vào nhãn
+        salesData.push({{ p.total_sales }});  // Thêm tổng số lượng bán vào dữ liệu
+    {% endfor %}
+
+    var ctx = document.getElementById('myChart').getContext('2d');
+
+    var myChart = new Chart(ctx, {
+        type: 'bar',  // Biểu đồ dạng thanh
+        data: {
+          labels: productLabels,  // Gán tên sản phẩm
+          datasets: [{
+            label: 'Số lượng mua',
+            data: salesData,  // Gán dữ liệu số lượng mua
+            borderWidth: 1,
+            backgroundColor: '#6610f2',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+                display: true,
+                text: 'TOP 10 SẢN PHẨM ĐƯỢC MUA NHIỀU NHẤT',
+                font: {
+                    size: 20
+                }
+              }
+            },
+          scales: {
+            y: {
+              beginAtZero: true  // Bắt đầu trục y từ 0
+            }
+          }
+        }
+    });
+</script>
+
+<script>
+    let labels1 = [];
+    let data1 = [];
+
+    {% for c in total_revenue_by_day %}
+        var date = new Date('{{ c.day }}');
+        var day = date.getDate().toString().padStart(2, '0');
+        var month = (date.getMonth() + 1).toString().padStart(2, '0');
+        labels1.push(`${day}-${month}`);
+        data1.push({{ c.total_revenue }});
+
+    {% endfor %}
+
+    var ctx = document.getElementById('myChart1').getContext('2d');
+
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels1,
+          datasets: [{
+            label: 'Doanh Thu',
+            data: data1,
+            borderWidth: 1,
+            backgroundColor: 'rgba(5, 54, 77, 1)',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+                display: true,
+                text: 'TỔNG DOANH THU THEO NGÀY',
+                font: {
+                    size: 20
+                }
+              }
+            },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+    });
+</script>
+
+<script>
+    let labels2 = [];
+    let data2 = [];
+
+    {% for c in count_products_by_category %}
+        {% if c.total_product != 0 %}
+            labels2.push('{{ c.name }}');
+            data2.push({{ c.total_product }});
+        {% endif %}
+    {% endfor %}
+
+    var ctx = document.getElementById('myChart2').getContext('2d');
+
+    var myChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels2,
+          datasets: [{
+            label: 'Số Lượng Sản Phẩm',
+            data: data2,
+            borderWidth: 1,
+            backgroundColor: [
+                'rgb(21, 75, 182)',
+                'rgb(244, 110, 103)',
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            title: {
+                display: true,
+                text: 'DANH MỤC SẢN PHẨM TRÊN HỆ THỐNG',
+                font: {
+                    size: 20
+                }
+              }
+            },
+        }
+    });
+</script>
+
+<!--<script>-->
+<!--    let campaignLabels = [];-->
+<!--    let donationData = [];-->
+
+<!--    {% for campaign in total_donation_by_campaign %}-->
+<!--        campaignLabels.push('{{ campaign.name }}');-->
+<!--        donationData.push({{ campaign.total_donation|default:0 }});-->
+<!--    {% endfor %}-->
+
+<!--    var ctx3 = document.getElementById('myChart3').getContext('2d');-->
+
+<!--    var myChart3 = new Chart(ctx3, {-->
+<!--        type: 'bar',-->
+<!--        data: {-->
+<!--          labels: campaignLabels,-->
+<!--          datasets: [{-->
+<!--            label: 'Tổng tiền donate (VND)',-->
+<!--            data: donationData,-->
+<!--            borderWidth: 1,-->
+<!--            backgroundColor: 'rgba(75, 192, 192, 0.7)',-->
+<!--          }]-->
+<!--        },-->
+<!--        options: {-->
+<!--          responsive: true,-->
+<!--          maintainAspectRatio: false,-->
+<!--          plugins: {-->
+<!--            title: {-->
+<!--                display: true,-->
+<!--                text: 'TỔNG SỐ TIỀN DONATE THEO CHIẾN DỊCH',-->
+<!--                font: {-->
+<!--                    size: 20-->
+<!--                }-->
+<!--              }-->
+<!--            },-->
+<!--          scales: {-->
+<!--            y: {-->
+<!--              beginAtZero: true-->
+<!--            }-->
+<!--          }-->
+<!--        }t-->
+<!--    });-->
+<!--</script>-->
+<script>
+    let productLikeLabels = [];
+    let likeData = [];
+
+    // Vòng lặp để lấy dữ liệu từ top 10 sản phẩm có nhiều lượt thích nhất
+    {% for product in top_10_products_by_likes %}
+        productLikeLabels.push('{{ product.name }}');  // Thêm tên sản phẩm vào nhãn
+        likeData.push({{ product.total_likes }});  // Thêm tổng số lượt like vào dữ liệu
+    {% endfor %}
+
+    var ctx4 = document.getElementById('myChart4').getContext('2d');
+
+    var myChart4 = new Chart(ctx4, {
+        type: 'bar',  // Biểu đồ dạng thanh
+        data: {
+          labels: productLikeLabels,  // Gán tên sản phẩm
+          datasets: [{
+            label: 'Số lượng yêu thích',
+            data: likeData,  // Gán dữ liệu số lượt like
+            borderWidth: 1,
+            backgroundColor: 'rgba(255, 99, 132, 0.7)',  // Màu thanh biểu đồ
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+                display: true,
+                text: 'TOP 10 SẢN PHẨM ĐƯỢC YÊU THÍCH NHẤT',
+                font: {
+                    size: 20
+                }
+              }
+            },
+          scales: {
+            y: {
+              beginAtZero: true  // Bắt đầu trục y từ 0
+            }
+          }
+        }
+    });
+</script>
+
+<div ></div>
+<h2 style="margin-top: 30px">Chọn Campaign để Xem Top 10 Người Donate</h2>
+<form method="get" id="campaignForm" class="campaignForm">
+    <label for="campaignSelect">Chọn Campaign:</label>
+    <select id="campaignSelect" name="campaign_id" onchange="document.getElementById('campaignForm').submit();">
+        <option value="">--- Tất cả ---</option>
+        {% for campaign in campaigns %}
+            <option value="{{ campaign.id }}" {% if selected_campaign_id == campaign.id %}selected{% endif %}>{{ campaign.name }}</option>
+        {% endfor %}
+    </select>
+</form>
+<h2>Top 10 Người Donate Cho Campaign {% if selected_campaign_id %}: {{ selected_campaign_name }} {% else %} Tất Cả {% endif %}</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th style="color: white">User</th>
+            <th style="color: white">Total Donation (VND)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for donor in top_donors_by_campaign %}
+            <tr>
+                <td>{{ donor.user__username }}</td>
+                <td>{{ donor.total_donation|default:"0.00" }} VND</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
